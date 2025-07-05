@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모리아 타로 마스터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <style>
+
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background-color: #0c0a17; overflow-y: auto; }
+        
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #0c0a17; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease-out, visibility 0.8s; }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #splash-screen img { max-width: 90%; max-height: 90%; object-fit: contain; box-shadow: 0 0 50px rgba(255, 255, 255, 0.2); }
+
+        #star-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; }
+        .star { position: absolute; background-color: white; border-radius: 50%; animation: twinkle infinite alternate; }
+        @keyframes twinkle { 
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); } 
+        }
+
+        #tarot-app-container { display: flex; flex-direction: column; min-height: 100vh; color: #e0e0e0; position: relative; z-index: 1; }
+        .container { width: 100%; margin-left: auto; margin-right: auto; padding: 1rem; position: relative; z-index: 2; }
+        @media (min-width: 768px) { .container { padding: 2rem; } }
+        
+        .translucent-box { background-color: rgba(12, 10, 23, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .category-btn { background: linear-gradient(145deg, #e6e6e6, #ffffff); border: 1px solid rgba(0,0,0,0.1); color: #374151; box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.7); transition: all 0.2s ease-in-out; position: relative; }
+        .category-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.7); }
+        .category-btn.active { background: linear-gradient(145deg, #6d28d9, #8b5cf6); color: white !important; box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), inset 0 1px 2px rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+        
+        .card-container { perspective: 1500px; }
+        .card { transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1), box-shadow 0.3s ease; transform-style: preserve-3d; position: relative; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 0.5rem; overflow: hidden; }
+        .card-front { transform: rotateY(180deg); }
+        .card-back { background-color: #1a1a2e; background-image: radial-gradient(circle at center, rgba(128, 128, 255, 0.2), transparent 70%), repeating-radial-gradient(circle at center, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 10px); border: 2px solid #5a5a8a; display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.6); font-size: 2.5rem; text-shadow: 0 0 8px rgba(255, 255, 255, 0.5); }
+        .card-back::after { content: '✧'; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .reversed-image { transform: rotate(180deg); }
+        
+        #toast { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; opacity: 0; transition: visibility 0s, opacity 0.5s linear; }
+        #toast.show { visibility: visible; opacity: 1; }
+        #toast.error { background-color: #dc2626; }
+
+        #facedown-spread { width: 100%; min-height: 300px; padding-top: 20px; padding-bottom: 50px; }
+        .swiper-pagination { display: none; }
+	
+	.swiper-wrapper {
+    transition-timing-function: linear !important;
+}
+
+        
+        #facedown-spread.shuffling-fast .swiper-slide {
+            opacity: 1;
+            transition: opacity 0.5s linear;
+        }
+
+        .swiper-slide { 
+            width: 120px;
+            aspect-ratio: 5 / 8;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            transition: transform 0.5s ease, opacity 0.5s ease; 
+        }
+        .swiper-slide .card-back-wrapper { width: 100%; height: 100%; transition: all 0.3s ease; }
+        .swiper-slide:not(.selected) .card-back-wrapper:hover { transform: translateY(-15px) scale(1.03); box-shadow: 0 0 25px rgba(230, 230, 255, 0.9); cursor: pointer; }
+        .swiper-slide.selected .card-back-wrapper { transform: translateY(-20px) scale(1.02); box-shadow: 0 0 30px #a78bfa; }
+
+        #reading-result-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; transition: opacity 0.5s ease; }
+        .result-card-wrapper { width: 100%; max-width: 260px; text-align: center; transition: transform 0.5s ease, opacity 0.5s ease; }
+        .result-card-wrapper .card-container { 
+            width: 220px;
+            aspect-ratio: 5 / 8;
+            margin: 0 auto; 
+        }
+        .result-card-wrapper .card-summary { padding: 1rem; }
+
+        #detailed-reading-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s ease; }
+        #detailed-reading-modal.visible { display: flex; opacity: 1; }
+        #detailed-modal-content { background-color: #1a1a2e; padding: 2rem; border-radius: 1rem; width: 95%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; gap: 1.5rem; position: relative; transform: scale(0.9); transition: transform 0.5s ease; }
+        #detailed-reading-modal.visible #detailed-modal-content { transform: scale(1); }
+        #detailed-modal-close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 2rem; cursor: pointer; color: #9ca3af; transition: color 0.2s; }
+        #detailed-modal-close-btn:hover { color: white; }
+        #detailed-card-display { flex-shrink: 0; align-self: center; }
+        #detailed-card-display .card-container { 
+            width: 180px; 
+            aspect-ratio: 5 / 8;
+        }
+        #detailed-card-text { flex-grow: 1; overflow-y: auto; color: #e5e7eb; text-align: left; width: 100%; }
+        .translate-btn-small { padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-top: 0.5rem; }
+
+        #admin-icon { position: fixed; bottom: 0px; right: 0px; cursor: pointer; z-index: 99; width: 20px; height: 20px; opacity: 0; }
+        #admin-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 100; display: none; align-items: center; justify-content: center; }
+        #admin-modal-content { background-color: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative; }
+        #admin-modal-content h2, #admin-modal-content label, #admin-modal-content h3 { color: #374151; }
+        #admin-modal-content input, #admin-modal-content textarea, #admin-modal-content select { color: #1f2937; background-color: #fff; }
+        #admin-modal-content textarea { min-height: 100px; }
+        #admin-close-btn { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+
+        @media (max-width: 768px) { 
+            .swiper-slide { width: 80px; aspect-ratio: 5 / 8; }
+            #detailed-card-display .card-container { width: 100px; aspect-ratio: 5 / 8; } 
+        }
+    </style>
+</head>
+<body>
+    <div id="splash-screen"><img src="1.jpg" alt="모리아 타로 마스터"></div>
+    <div id="star-container"></div>
+    <div id="tarot-app-container">
+        <div class="container mx-auto">
+            <header class="relative text-center mb-6 md:mb-8 pt-12 md:pt-0">
+                <div id="language-selector-container" class="absolute top-0 right-0 p-1 md:p-0">
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <button type="button" data-lang="ko" class="lang-btn px-3 py-1 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-l-lg hover:bg-white/20">한국어</button>
+                        <button type="button" data-lang="en" class="lang-btn px-3 py-1 text-sm font-medium text-white bg-white/10 border-t border-b border-r border-white/20 rounded-r-lg hover:bg-white/20">English</button>
+                    </div>
+                </div>
+                <h1 id="main-title" class="text-4xl md:text-5xl font-bold text-white" style="text-shadow: 0 0 10px rgba(255,255,255,0.5);"></h1>
+                <p id="main-subtitle" class="mt-2 text-gray-300"></p>
+            </header>
+            <main id="app-view">
+                <div class="translucent-box p-4 rounded-xl shadow-lg mb-6 md:mb-8">
+                    <h2 id="category-title" class="text-xl font-bold text-center mb-4"></h2>
+                    <div id="category-buttons" class="flex flex-wrap justify-center gap-2 md:gap-4"></div>
+                </div>
+                <div class="translucent-box p-4 md:p-6 rounded-xl shadow-lg min-h-[400px] overflow-hidden">
+                    <div id="setup-area" class="text-center mb-6">
+                        <h2 id="reading-title" class="text-2xl font-bold"></h2>
+                        <p id="category-description" class="mt-2 max-w-4xl mx-auto leading-relaxed"></p>
+                        <p id="reading-instruction" class="mt-4"></p>
+                        <button id="start-reading-btn" class="mt-4 px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"></button>
+                    </div>
+                    <div id="spread-slider-container" class="relative hidden">
+                        <p id="slider-instruction" class="text-center mb-4 leading-relaxed"></p>
+                        <div id="facedown-spread" class="swiper">
+                            <div class="swiper-wrapper"></div>
+                        </div>
+                    </div>
+                    <div id="reading-result" class="mt-8"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="detailed-reading-modal">
+        <div id="detailed-modal-content">
+            <span id="detailed-modal-close-btn" onclick="closeDetailedView()">×</span>
+            <div id="detailed-card-display"></div>
+            <div id="detailed-card-text"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="admin-icon" title="관리자 페이지"></div>
+    <div id="admin-modal" style="display: none;">
+        <div id="admin-modal-content">
+            <span id="admin-close-btn" title="닫기">×</span>
+            <h2 class="text-xl font-bold mb-4">카드 데이터 관리자</h2>
+            <p class="text-sm mb-4">모든 해설은 한국어 기준으로 입력해주세요.</p>
+            <label for="admin-card-select">수정할 카드 선택:</label>
+            <select id="admin-card-select" class="w-full p-2 border rounded mb-4"></select>
+            <div id="admin-edit-form" class="mt-4 space-y-4">
+                <div><label for="admin-image-url">이미지 URL:</label><input type="text" id="admin-image-url" class="w-full p-2 border rounded"></div>
+                <div><label for="admin-upright-keywords">정방향 키워드 (쉼표로 구분):</label><input type="text" id="admin-upright-keywords" class="w-full p-2 border rounded"></div>
+                <div><label for="admin-reversed-keywords">역방향 키워드 (쉼표로 구분):</label><input type="text" id="admin-reversed-keywords" class="w-full p-2 border rounded"></div>
+                <h3 class="text-lg font-bold pt-4 border-t mt-4">정방향 해설</h3>
+                <div><label for="admin-meaning-today">오늘의 타로:</label><textarea id="admin-meaning-today" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-meaning-general">일반 (대체 해설용):</label><textarea id="admin-meaning-general" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-meaning-love">애정:</label><textarea id="admin-meaning-love" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-meaning-career">취업:</label><textarea id="admin-meaning-career" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-meaning-business">사업:</label><textarea id="admin-meaning-business" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-meaning-money">금전:</label><textarea id="admin-meaning-money" class="w-full p-2 border rounded"></textarea></div>
+                <h3 class="text-lg font-bold pt-4 border-t mt-4">역방향 해설</h3>
+                <div><label for="admin-rev-meaning-today">오늘의 타로:</label><textarea id="admin-rev-meaning-today" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-rev-meaning-general">일반 (대체 해설용):</label><textarea id="admin-rev-meaning-general" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-rev-meaning-love">애정:</label><textarea id="admin-rev-meaning-love" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-rev-meaning-career">취업:</label><textarea id="admin-rev-meaning-career" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-rev-meaning-business">사업:</label><textarea id="admin-rev-meaning-business" class="w-full p-2 border rounded"></textarea></div>
+                <div><label for="admin-rev-meaning-money">금전:</label><textarea id="admin-rev-meaning-money" class="w-full p-2 border rounded"></textarea></div>
+            </div>
+            <div class="mt-6 flex flex-wrap gap-4 justify-between">
+                <button id="admin-save-btn" class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">변경사항 저장</button>
+                <div class="w-full md:w-auto flex flex-col md:flex-row gap-4">
+                    <button id="admin-export-btn" class="px-4 py-2 bg-teal-600 text-white font-bold rounded hover:bg-teal-700">엑셀로 내보내기</button>
+                    <button id="admin-import-btn" class="px-4 py-2 bg-sky-600 text-white font-bold rounded hover:bg-sky-700">엑셀에서 가져오기</button>
+                    <input type="file" id="excel-import-input" class="hidden" accept=".xlsx, .xls">
+                    <button id="admin-download-html-btn" class="px-4 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700">수정된 HTML 다운로드</button>
+                    <button id="admin-reset-btn" class="px-4 py-2 bg-red-600 text-white font-bold rounded hover:bg-red-700">데이터 초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <textarea id="card-data-storage" style="display: none;"></textarea>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        const appState = { currentReadingType: 'today', selectedCards: [], fullDeck: [], isDataReady: false, currentLanguage: 'ko' };
+        const LOCAL_STORAGE_KEY = 'tarotMasterCardData';
+        const LANG_STORAGE_KEY = 'tarotMasterLanguage';
+        let swiperInstance = null;
+        
+        const uiText = {
+            ko: { mainTitle: "모리아 타로 마스터", mainSubtitle: "78개의 지혜로 마주하는 나의 마음", categoryTitle: "보고 싶은 운세를 선택하세요", readingInstruction: "다른 운세가 궁금하신가요? 카테고리를 선택하고 버튼을 누르세요.", startReadingBtn_new: "새로운 리딩 시작하기", startReadingBtn_shuffle: "카드 섞기", shuffleInstruction: "아래 버튼을 눌러 카드를 섞어주세요.", selectInstruction: "마음속으로 질문을 되뇌이며, 정신을 집중하고...<br>마음에 이끌리는 카드 {count}장을 선택하세요.", selectInstruction_more: "마음속으로 질문을 되뇌이며, 정신을 집중하고...<br>{count}장 더 선택하세요.", readingReady: "리딩 결과를 확인하세요.", detailsBtn_show: "자세히 보기", detailsBtn_hide: "간략히 보기", translateBtn: "Google로 번역" },
+            en: { mainTitle: "Moriah Tarot Master", mainSubtitle: "Facing my heart with 78 wisdoms", categoryTitle: "Choose a reading", readingInstruction: "Curious about other readings? Select a category and press the button.", startReadingBtn_new: "Start New Reading", startReadingBtn_shuffle: "Shuffle Cards", shuffleInstruction: "Press the button below to shuffle the cards.", selectInstruction: "Focus on your question...<br>and choose {count} card(s) that speak to you.", selectInstruction_more: "Focus on your question...<br>Choose {count} more card(s).", readingReady: "Check your reading results.", detailsBtn_show: "View Details", detailsBtn_hide: "Show Less", translateBtn: "Translate" }
+        };
+        const readingTypes = { 
+            today: { 
+                ko: { title: '오늘의 타로', labels: ['오늘의 조언'], description: '카드는 당신에게 필요한 에너지, 마주할 기회, 그리고 성찰의 교훈을 비춰주는 거울입니다.<br>오늘 하루를 깊은 통찰과 함께 시작하세요.' }, 
+                en: { title: 'Tarot of the Day', labels: ['Advice for Today'], description: 'The card is a mirror that reflects the energy you need, the opportunities you will face, and the lessons of introspection.<br>Start your day with deep insight.' }, 
+                cardsToDraw: 1, dataKey: 'today' 
+            }, 
+            love: { 
+                ko: { title: '애정운', labels: ['당신', '상대방', '관계'], description: '당신 마음속 사랑의 지도를 섬세하게 비춥니다.<br>진정으로 원하는 관계는 무엇인지, 사랑 앞에서 당신의 모습은 어떤지, 관계의 흐름을 성찰하며 건강한 사랑을 가꾸어 보세요.' }, 
+                en: { title: 'Love Reading', labels: ['You', 'Partner', 'Relationship'], description: 'It delicately illuminates the map of love in your heart.<br>Reflect on the relationship you truly desire, how you appear in the face of love, and the flow of the relationship to cultivate a healthy love.' }, 
+                cardsToDraw: 3, dataKey: 'love' 
+            }, 
+            career: { 
+                ko: { title: '취업운', labels: ['나의 강점', '나의 약점', '조언'], description: '당신의 재능과 가능성이라는 보물 창고의 문을 열어주는 열쇠입니다.<br>잊고 있던 열정과 잠재력을 발견하고, 당신에게 가장 어울리는 길을 탐색해 보세요.' }, 
+                en: { title: 'Career Reading', labels: ['My Strengths', 'My Weaknesses', 'Advice'], description: 'It is the key that opens the door to the treasure chest of your talents and potential.<br>Discover your forgotten passion and potential, and explore the path that suits you best.' }, 
+                cardsToDraw: 3, dataKey: 'career' 
+            }, 
+            business: { 
+                ko: { title: '사업운', labels: ['현재 상황', '필요한 행동', '예상 결과'], description: '당신 안에 잠든 지혜로운 전략가를 깨워보세요.<br>현재 사업의 에너지, 기회와 위기, 나아갈 방향에 대한 깊은 통찰로 당신의 비즈니스를 이끌어갈 지혜를 얻게 됩니다.' }, 
+                en: { title: 'Business Reading', labels: ['Current Situation', 'Required Action', 'Expected Outcome'], description: 'Awaken the wise strategist dormant within you.<br>Gain the wisdom to lead your business with deep insight into its current energy, opportunities and crises, and the direction to take.' }, 
+                cardsToDraw: 3, dataKey: 'business' 
+            }, 
+            money: { 
+                ko: { title: '금전운', labels: ['현재 금전 상황', '기회 또는 장애물', '미래의 흐름'], description: '돈에 대한 당신의 생각, 신념, 습관을 비추는 정직한 거울입니다.<br>재물의 흐름을 이해하고, 물질적 안정을 넘어 마음의 풍요를 이루도록 돕습니다.' }, 
+                en: { title: 'Money Reading', labels: ['Current Finances', 'Opportunity/Obstacle', 'Future Flow'], description: 'It is an honest mirror that reflects your thoughts, beliefs, and habits about money.<br>It helps you understand the flow of wealth and achieve richness of mind beyond material stability.' }, 
+                cardsToDraw: 3, dataKey: 'money' 
+            }
+        };
+
+        const getEl = (id) => document.getElementById(id);
+        const UIElements = {};
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => { getEl('splash-screen')?.classList.add('hidden'); }, 2000);
+            createStars();
+
+            const ids = ['main-title', 'main-subtitle', 'category-title', 'category-buttons', 'start-reading-btn', 'setup-area', 'reading-result', 'spread-slider-container', 'slider-instruction', 'facedown-spread', 'reading-title', 'reading-instruction', 'category-description', 'admin-icon', 'admin-modal', 'admin-close-btn', 'admin-card-select', 'admin-edit-form', 'admin-save-btn', 'admin-reset-btn', 'card-data-storage', 'admin-export-btn', 'admin-import-btn', 'excel-import-input', 'admin-download-html-btn', 'detailed-reading-modal', 'detailed-modal-content', 'detailed-card-display', 'detailed-card-text', 'detailed-modal-close-btn'];
+            ids.forEach(id => UIElements[id.replace(/-(\w)/g, (m, p1) => p1.toUpperCase())] = getEl(id));
+
+            const savedLang = localStorage.getItem(LANG_STORAGE_KEY) || 'ko';
+            changeLanguage(savedLang);
+            
+            loadCardData(); 
+            appState.isDataReady = true; 
+            setupAdminPanel();
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', (e) => changeLanguage(e.target.dataset.lang)));
+            UIElements.startReadingBtn.addEventListener('click', startShuffleAndDeal);
+        });
+
+        function createStars() {
+            const container = getEl('star-container');
+            if (!container) return;
+            const starCount = 500;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2.5 + 0.5;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                container.appendChild(star);
+            }
+        }
+        
+        function changeLanguage(lang) {
+            appState.currentLanguage = lang;
+            localStorage.setItem(LANG_STORAGE_KEY, lang);
+            updateUIText(lang);
+            selectReadingType(appState.currentReadingType, true);
+            if (appState.selectedCards.length > 0) { displayReading(); }
+        }
+
+        function updateUIText(lang) {
+            const texts = uiText[lang];
+            UIElements.mainTitle.textContent = texts.mainTitle;
+            UIElements.mainSubtitle.textContent = texts.mainSubtitle;
+            UIElements.categoryTitle.textContent = texts.categoryTitle;
+
+            const categoryButtonsContainer = getEl('category-buttons');
+            categoryButtonsContainer.innerHTML = '';
+            Object.keys(readingTypes).forEach(type => {
+                const btn = document.createElement('button');
+                btn.dataset.type = type;
+                btn.className = 'category-btn px-4 py-2 font-semibold rounded-full';
+                btn.textContent = readingTypes[type][lang].title;
+                btn.addEventListener('click', () => selectReadingType(type));
+                categoryButtonsContainer.appendChild(btn);
+            });
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.lang-btn[data-lang="${lang}"]`)?.classList.add('active');
+        }
+        
+        function loadCardData() { 
+            const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            const dataEl = UIElements.cardDataStorage;
+            if (storedData) {
+                appState.fullDeck = JSON.parse(storedData);
+            } else if (dataEl && dataEl.value.trim()) {
+                appState.fullDeck = JSON.parse(dataEl.value.trim());
+            } else {
+                appState.fullDeck = [];
+            }
+        }
+
+        function selectReadingType(type, fromLanguageChange = false) { 
+            appState.currentReadingType = type;
+            if (!fromLanguageChange) { appState.selectedCards = []; }
+            const lang = appState.currentLanguage;
+            const config = readingTypes[type][lang]; 
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type)); 
+            UIElements.readingTitle.textContent = config.title; 
+            UIElements.categoryDescription.innerHTML = config.description || (readingTypes[type]['ko'] ? readingTypes[type]['ko'].description : '');
+            resetReadingArea(); 
+        }
+
+        function resetReadingArea() { 
+            const lang = appState.currentLanguage;
+            UIElements.setupArea.style.display = 'block';
+            UIElements.spreadSliderContainer.style.display = 'none';
+            UIElements.readingResult.innerHTML = ''; 
+            if (swiperInstance) { swiperInstance.destroy(true, true); swiperInstance = null; }
+            const swiperWrapper = UIElements.facedownSpread.querySelector('.swiper-wrapper');
+            if (swiperWrapper) swiperWrapper.innerHTML = '';
+            UIElements.startReadingBtn.disabled = !appState.isDataReady; 
+            UIElements.startReadingBtn.textContent = uiText[lang].startReadingBtn_shuffle; 
+            UIElements.readingInstruction.innerHTML = uiText[lang].shuffleInstruction;
+        }
+        
+        function startShuffleAndDeal() { 
+            if (!appState.isDataReady || !appState.fullDeck || appState.fullDeck.length === 0) { 
+                showToast("카드 데이터가 없습니다. 관리자 페이지에서 데이터를 추가해주세요.", true); return; 
+            } 
+            appState.selectedCards = [];
+            UIElements.setupArea.style.display = 'none';
+            UIElements.spreadSliderContainer.style.display = 'block';
+            UIElements.sliderInstruction.innerHTML = "카드를 섞는 중입니다...";
+            
+            const shuffledDeck = fisherYatesShuffle([...appState.fullDeck]); 
+            const lang = appState.currentLanguage; 
+            const { cardsToDraw } = readingTypes[appState.currentReadingType]; 
+            
+            const swiperWrapper = UIElements.facedownSpread.querySelector('.swiper-wrapper');
+            swiperWrapper.innerHTML = '';
+
+            const cardsForSlider = [...shuffledDeck, ...shuffledDeck, ...shuffledDeck];
+            cardsForSlider.forEach((card) => {
+                const slideEl = document.createElement('div');
+                slideEl.className = 'swiper-slide';
+                slideEl.innerHTML = `<div class="card-back-wrapper w-full h-full"><div class="card-back w-full h-full"></div></div>`;
+                slideEl.dataset.cardInfo = JSON.stringify(card);
+                swiperWrapper.appendChild(slideEl);
+            });
+            
+            swiperInstance = new Swiper('.swiper', {
+                effect: 'coverflow',
+                grabCursor: false,
+                centeredSlides: true,
+                slidesPerView: 'auto',
+                loop: true,
+                speed: 100, // [수정] 셔플 속도 대폭 상향
+                autoplay: { 
+                    delay: 0, 
+                    disableOnInteraction: false 
+                },
+                coverflowEffect: {
+                    rotate: 30,
+                    stretch: -10,
+                    depth: 150,
+                    modifier: 1,
+                    slideShadows: false,
+                },
+                breakpoints: { 
+                    320: { slidesPerView: 3, spaceBetween: -20 }, 
+                    640: { slidesPerView: 5, spaceBetween: -30 } 
+                }
+            });
+            
+            UIElements.facedownSpread.classList.add('shuffling-fast');
+            UIElements.facedownSpread.querySelectorAll('.swiper-slide').forEach(s => s.style.pointerEvents = 'none');
+
+            // [수정] 더 빠른 속도에 맞춰 셔플 시간 단축
+            setTimeout(() => { 
+                if (swiperInstance && !swiperInstance.destroyed) {
+                    UIElements.facedownSpread.classList.remove('shuffling-fast');
+                    swiperInstance.autoplay.stop();
+                    
+                    swiperInstance.params.grabCursor = true;
+                    swiperInstance.update();
+
+                    UIElements.sliderInstruction.innerHTML = uiText[lang].selectInstruction.replace('{count}', cardsToDraw);
+                    
+                    UIElements.facedownSpread.querySelectorAll('.swiper-slide').forEach(s => {
+                        s.style.pointerEvents = 'auto';
+                        s.addEventListener('click', handleCardSelection);
+                    });
+                }
+            }, 3500); // 2초간 셔플
+        }
+        
+        function handleCardSelection(event) { 
+            const slideEl = event.currentTarget;
+            const lang = appState.currentLanguage; 
+            const config = readingTypes[appState.currentReadingType]; 
+            if (appState.selectedCards.length >= config.cardsToDraw || slideEl.classList.contains('selected')) return; 
+            
+            const cardInfo = JSON.parse(slideEl.dataset.cardInfo);
+            const originalCard = appState.fullDeck.find(c => c.id === cardInfo.id);
+            if (!originalCard) return;
+
+            const finalCard = {...originalCard};
+            finalCard.isReversed = Math.random() < 0.5; 
+            appState.selectedCards.push(finalCard); 
+            slideEl.classList.add('selected');
+            
+            if (appState.selectedCards.length === config.cardsToDraw) { 
+                UIElements.sliderInstruction.innerHTML = uiText[lang].readingReady; 
+                
+                if(swiperInstance && !swiperInstance.destroyed) {
+                    swiperInstance.params.grabCursor = false;
+                    swiperInstance.disable();
+                    swiperInstance.update();
+                }
+                setTimeout(displayReading, 1000); 
+            } else { 
+                const remaining = config.cardsToDraw - appState.selectedCards.length; 
+                UIElements.sliderInstruction.innerHTML = uiText[lang].selectInstruction_more.replace('{count}', remaining); 
+            } 
+        }
+        
+        function displayReading() {
+            const lang = appState.currentLanguage;
+            UIElements.spreadSliderContainer.style.display = 'none';
+            UIElements.setupArea.style.display = 'block';
+            UIElements.startReadingBtn.textContent = uiText[lang].startReadingBtn_new; 
+            UIElements.readingInstruction.textContent = uiText[lang].readingInstruction; 
+            
+            const config = readingTypes[appState.currentReadingType];
+            const resultContainer = UIElements.readingResult;
+            resultContainer.innerHTML = '';
+
+            const grid = document.createElement('div');
+            grid.id = 'reading-result-grid';
+            appState.selectedCards.forEach((card, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'result-card-wrapper';
+                
+                const cardDisplayHTML = `<div class="card-container"><div class="card is-flipped w-full h-full"><div class="card-face card-front"><img src="${card.imageUrl}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x500/cccccc/ffffff?text=Image+Error';" alt="${card.name_kr}" class="w-full h-full object-contain ${card.isReversed ? 'reversed-image' : ''}"></div></div></div>`;
+                const summary = getCardSummary(card, config.dataKey);
+                const cardInfoHTML = `<div class="card-summary">
+                                        <h3 class="text-lg font-semibold text-purple-300 mb-1">${config[lang].labels[index]}</h3>
+                                        <h4 class="text-xl font-bold mb-2">${card.name_kr} ${card.isReversed ? '(역)' : '(정)'}</h4>
+                                        <p class="text-sm text-gray-300 mb-3">${summary}</p>
+                                        <button onclick='showDetailedView(${index})' class="details-btn text-xs py-1 px-3">${uiText[lang].detailsBtn_show}</button>
+                                      </div>`;
+                wrapper.innerHTML = cardDisplayHTML + cardInfoHTML;
+                grid.appendChild(wrapper);
+            });
+            resultContainer.appendChild(grid);
+            UIElements.startReadingBtn.disabled = false;
+        }
+
+        function getCardSummary(card, dataKey) {
+            const meaningSource = card.isReversed ? card.reversed_meaning : card.meaning;
+            const fullMeaningText = (meaningSource && meaningSource[dataKey]) || (meaningSource && meaningSource['general']) || '해설이 준비되지 않았습니다.';
+            const summaryMatch = fullMeaningText.match(/<p>.*?<\/p>/);
+            return summaryMatch ? summaryMatch[0].replace(/<\/?p>/g, '') : fullMeaningText.split('.')[0] + '.';
+        }
+
+        function showDetailedView(cardIndex) {
+            const lang = appState.currentLanguage;
+            const card = appState.selectedCards[cardIndex];
+            const positionLabel = readingTypes[appState.currentReadingType][lang].labels[cardIndex];
+            const config = readingTypes[appState.currentReadingType];
+            const cardDisplay = UIElements.detailedCardDisplay;
+            const cardText = UIElements.detailedCardText;
+
+            cardDisplay.innerHTML = `<div class="card-container"><div class="card is-flipped w-full h-full"><div class="card-face card-front"><img src="${card.imageUrl}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x500/cccccc/ffffff?text=Image+Error';" alt="${card.name_kr}" class="w-full h-full object-contain ${card.isReversed ? 'reversed-image' : ''}"></div></div></div>`;
+            
+            const keywords = card.isReversed ? card.reversed_keywords : card.upright_keywords;
+            const meaningSource = card.isReversed ? card.reversed_meaning : card.meaning;
+            const fullMeaningText = (meaningSource && meaningSource[config.dataKey]) || (meaningSource && meaningSource['general']) || '해설이 준비되지 않았습니다.';
+            const translateButtonHTML = lang === 'en' ? `<a href="https://translate.google.com/?sl=ko&tl=en&text=${encodeURIComponent(getPureText(fullMeaningText))}" target="_blank" class="details-btn translate-btn-small inline-block">${uiText[lang].translateBtn}</a>` : '';
+
+            cardText.innerHTML = `<h3 class="text-lg font-semibold text-purple-300 mb-1">${positionLabel}</h3>
+                                  <h4 class="text-3xl font-bold mb-2 text-white">${card.name_kr} ${card.isReversed ? '(역)' : '(정)'}</h4>
+                                  <div class="my-4 border-b border-t border-white/10 py-3"><p class="text-indigo-300 italic">${keywords.join(' · ')}</p></div>
+                                  <div class="prose prose-invert max-w-none text-gray-300 leading-relaxed">${fullMeaningText}</div>
+                                  ${translateButtonHTML}`;
+
+            UIElements.detailedReadingModal.classList.add('visible');
+        }
+
+        function closeDetailedView() {
+            UIElements.detailedReadingModal.classList.remove('visible');
+        }
+
+        function fisherYatesShuffle(array) { let ci = array.length, ri; while (ci !== 0) { ri = Math.floor(Math.random() * ci); ci--; [array[ci], array[ri]] = [array[ri], array[ci]]; } return array; }
+        function showToast(message, isError = false) { const toast = getEl("toast"); toast.textContent = message; toast.className = `toast show ${isError ? 'error' : ''}`; setTimeout(() => { toast.className = toast.className.replace("show", "").replace("error", ""); }, 3000); }
+        function getPureText(htmlString) { if (!htmlString) return ''; const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlString.replace(/<\/p>/g, '\n').replace(/<br\s*\/?>/g, '\n'); return tempDiv.innerText.trim(); }
+        
+        function setupAdminPanel() {
+            const adminIcon = getEl('admin-icon');
+            if (adminIcon) {
+                adminIcon.addEventListener('dblclick', () => {
+                    const correctPassword = 'Zhfktmxbeldh16!';
+                    const userInput = prompt('관리자 비밀번호를 입력하세요:');
+                    if (userInput === null) return;
+                    if (userInput === correctPassword) openAdminModal();
+                    else alert('비밀번호가 틀렸습니다.');
+                });
+            }
+            getEl('admin-close-btn')?.addEventListener('click', closeAdminModal);
+            getEl('admin-card-select')?.addEventListener('change', populateAdminForm);
+            getEl('admin-save-btn')?.addEventListener('click', handleAdminSave);
+            getEl('admin-reset-btn')?.addEventListener('click', handleAdminReset);
+            getEl('admin-export-btn')?.addEventListener('click', handleAdminExcelExport);
+            getEl('admin-import-btn')?.addEventListener('click', () => getEl('excel-import-input').click());
+            getEl('excel-import-input')?.addEventListener('change', handleAdminExcelImport);
+            getEl('admin-download-html-btn')?.addEventListener('click', handleHtmlDownload);
+        }
+
+        function openAdminModal() {
+            getEl('admin-modal').style.display = 'flex';
+            populateAdminCardSelect();
+            populateAdminForm();
+        }
+
+        function closeAdminModal() {
+            getEl('admin-modal').style.display = 'none';
+        }
+
+        function populateAdminCardSelect() {
+            const adminCardSelect = getEl('admin-card-select');
+            if (!adminCardSelect || !appState.fullDeck) return;
+            const currentVal = adminCardSelect.value;
+            adminCardSelect.innerHTML = appState.fullDeck.map(card => `<option value="${card.id}">ID ${card.id}: ${card.name_kr} (${card.name})</option>`).join('');
+            if (currentVal) adminCardSelect.value = currentVal;
+        }
+
+        function populateAdminForm() {
+            const selectedId = parseInt(getEl('admin-card-select').value);
+            const card = appState.fullDeck.find(c => c.id === selectedId);
+            if (!card) return;
+            getEl('admin-image-url').value = card.imageUrl || '';
+            getEl('admin-upright-keywords').value = (card.upright_keywords || []).join(', ');
+            getEl('admin-reversed-keywords').value = (card.reversed_keywords || []).join(', ');
+            const meaning = card.meaning || {};
+            const reversed_meaning = card.reversed_meaning || {};
+            getEl('admin-meaning-today').value = getPureText(meaning.today);
+            getEl('admin-meaning-general').value = getPureText(meaning.general);
+            getEl('admin-meaning-love').value = getPureText(meaning.love);
+            getEl('admin-meaning-career').value = getPureText(meaning.career);
+            getEl('admin-meaning-business').value = getPureText(meaning.business);
+            getEl('admin-meaning-money').value = getPureText(meaning.money);
+            getEl('admin-rev-meaning-today').value = getPureText(reversed_meaning.today);
+            getEl('admin-rev-meaning-general').value = getPureText(reversed_meaning.general);
+            getEl('admin-rev-meaning-love').value = getPureText(reversed_meaning.love);
+            getEl('admin-rev-meaning-career').value = getPureText(reversed_meaning.career);
+            getEl('admin-rev-meaning-business').value = getPureText(reversed_meaning.business);
+            getEl('admin-rev-meaning-money').value = getPureText(reversed_meaning.money);
+        }
+
+        function handleAdminSave() {
+            const selectedId = parseInt(getEl('admin-card-select').value);
+            const cardIndex = appState.fullDeck.findIndex(c => c.id === selectedId);
+            if (cardIndex === -1) return;
+            const formatToHtml = (text) => {
+                if (!text || text.trim() === '') return '';
+                return text.trim().split('\n').filter(Boolean).map(line => `<p>${line.trim()}</p>`).join('');
+            };
+            const updatedCard = {
+                ...appState.fullDeck[cardIndex],
+                imageUrl: getEl('admin-image-url').value.trim(),
+                upright_keywords: getEl('admin-upright-keywords').value.split(',').map(k => k.trim()).filter(Boolean),
+                reversed_keywords: getEl('admin-reversed-keywords').value.split(',').map(k => k.trim()).filter(Boolean),
+                meaning: {
+                    today: formatToHtml(getEl('admin-meaning-today').value),
+                    general: formatToHtml(getEl('admin-meaning-general').value),
+                    love: formatToHtml(getEl('admin-meaning-love').value),
+                    career: formatToHtml(getEl('admin-meaning-career').value),
+                    business: formatToHtml(getEl('admin-meaning-business').value),
+                    money: formatToHtml(getEl('admin-meaning-money').value),
+                },
+                reversed_meaning: {
+                    today: formatToHtml(getEl('admin-rev-meaning-today').value),
+                    general: formatToHtml(getEl('admin-rev-meaning-general').value),
+                    love: formatToHtml(getEl('admin-rev-meaning-love').value),
+                    career: formatToHtml(getEl('admin-rev-meaning-career').value),
+                    business: formatToHtml(getEl('admin-rev-meaning-business').value),
+                    money: formatToHtml(getEl('admin-rev-meaning-money').value),
+                }
+            };
+            appState.fullDeck[cardIndex] = updatedCard;
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState.fullDeck));
+            showToast('변경사항이 브라우저에 저장되었습니다.');
+        }
+
+        function handleAdminReset() {
+            if (confirm('정말로 모든 카드 데이터를 기본값으로 되돌리시겠습니까? 저장된 모든 변경사항이 사라집니다.')) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                getEl('card-data-storage').value = '';
+                loadCardData();
+                showToast('데이터가 초기화되었습니다.');
+                populateAdminForm();
+            }
+        }
+
+        function handleAdminExcelExport() {
+            const dataToExport = appState.fullDeck.map(card => {
+                const meaning = card.meaning || {};
+                const reversed_meaning = card.reversed_meaning || {};
+                return {
+                    id: card.id, name_kr: card.name_kr, name: card.name, imageUrl: card.imageUrl,
+                    upright_keywords: (card.upright_keywords || []).join(', '),
+                    reversed_keywords: (card.reversed_keywords || []).join(', '),
+                    upright_today: getPureText(meaning.today), upright_general: getPureText(meaning.general), upright_love: getPureText(meaning.love), upright_career: getPureText(meaning.career), upright_business: getPureText(meaning.business), upright_money: getPureText(meaning.money),
+                    reversed_today: getPureText(reversed_meaning.today), reversed_general: getPureText(reversed_meaning.general), reversed_love: getPureText(reversed_meaning.love), reversed_career: getPureText(reversed_meaning.career), reversed_business: getPureText(reversed_meaning.business), reversed_money: getPureText(reversed_meaning.money),
+                }
+            });
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "TarotData");
+            XLSX.writeFile(workbook, "tarot_data.xlsx");
+            showToast("모든 카드 데이터가 엑셀 파일로 내보내졌습니다.");
+        }
+
+        function handleAdminExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    if (!json || json.length < 1 || !json[0].hasOwnProperty('id')) {
+                        throw new Error("엑셀 파일의 형식이 올바르지 않습니다.");
+                    }
+                    const formatToHtml = (text) => {
+                        if (!text || String(text).trim() === '') return '';
+                        return String(text).trim().split('\n').filter(Boolean).map(line => `<p>${line.trim()}</p>`).join('');
+                    };
+                    const newDeck = json.map(row => ({
+                        id: Number(row.id), name: row.name || '', name_kr: row.name_kr || '',
+                        arcana: Number(row.id) < 22 ? 'Major' : 'Minor',
+                        imageUrl: row.imageUrl || '',
+                        upright_keywords: (row.upright_keywords || '').split(',').map(k => k.trim()),
+                        reversed_keywords: (row.reversed_keywords || '').split(',').map(k => k.trim()),
+                        meaning: { today: formatToHtml(row.upright_today), general: formatToHtml(row.upright_general), love: formatToHtml(row.upright_love), career: formatToHtml(row.upright_career), business: formatToHtml(row.upright_business), money: formatToHtml(row.upright_money) },
+                        reversed_meaning: { today: formatToHtml(row.reversed_today), general: formatToHtml(row.reversed_general), love: formatToHtml(row.reversed_love), career: formatToHtml(row.reversed_career), business: formatToHtml(row.reversed_business), money: formatToHtml(row.reversed_money) }
+                    }));
+                    appState.fullDeck = newDeck;
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState.fullDeck));
+                    populateAdminCardSelect();
+                    populateAdminForm();
+                    showToast("엑셀 파일에서 데이터를 성공적으로 가져왔습니다!");
+                } catch (error) {
+                    console.error("엑셀 파일 처리 오류:", error);
+                    showToast(error.message || "엑셀 파일을 처리하는 중 오류가 발생했습니다.", true);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleHtmlDownload() {
+            const newDoc = document.cloneNode(true);
+            const adminModalInNewDoc = newDoc.getElementById('admin-modal');
+            if (adminModalInNewDoc) { adminModalInNewDoc.style.display = 'none'; }
+            const storageElInNewDoc = newDoc.getElementById('card-data-storage');
+            storageElInNewDoc.value = JSON.stringify(appState.fullDeck, null, 2);
+            const fullHtml = `<!DOCTYPE html>\n` + newDoc.documentElement.outerHTML;
+            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tarot_master_updated.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('모든 변경사항이 포함된 HTML 파일이 다운로드되었습니다.');
+        }
+    </script>
+</body></html>
