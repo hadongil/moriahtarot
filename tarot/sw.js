@@ -4,7 +4,6 @@ const CACHE_NAME = 'moria-tarot-cache-v1';
 const urlsToCache = [
   '/tarot/', // 루트 URL
   '/tarot/index.html',
-  '/tarot/1.jpg', // 타로 카드 이미지
   '/tarot/icon-192.png',
   '/tarot/icon-512.png'
   // 여기에 CSS나 다른 JS 파일이 있다면 추가하세요.
