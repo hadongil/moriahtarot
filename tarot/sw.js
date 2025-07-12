@@ -14,8 +14,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        // Cache opened successfully
         return cache.addAll(urlsToCache);
+      })
+      .catch((error) => {
+        console.error('Cache installation failed:', error);
+        // Optionally skip waiting for failed cache installation
+        return Promise.resolve();
       })
   );
 });
@@ -26,7 +31,42 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((response) => {
         // 캐시에 파일이 있으면 그것을 반환하고, 없으면 네트워크에서 가져옴
-        return response || fetch(event.request);
+        if (response) {
+          return response;
+        }
+        
+        // 네트워크 요청 시도
+        return fetch(event.request)
+          .then((networkResponse) => {
+            // 유효한 응답인지 확인
+            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+              return networkResponse;
+            }
+            
+            // 응답을 복제하여 캐시에 저장
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                console.error('Cache put failed:', error);
+              });
+            
+            return networkResponse;
+          })
+          .catch((error) => {
+            console.error('Network fetch failed:', error);
+            // 오프라인 상태에서 기본 응답 반환 가능
+            return new Response('Offline - Resource not available', {
+              status: 503,
+              statusText: 'Service Unavailable'
+            });
+          });
+      })
+      .catch((error) => {
+        console.error('Cache match failed:', error);
+        return fetch(event.request);
       })
   );
 });
