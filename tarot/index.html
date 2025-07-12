@@ -2882,7 +2882,47 @@
         
         function updateUIText(lang) { const texts = uiText[lang]; UIElements.mainTitle.textContent = texts.mainTitle; UIElements.mainSubtitle.textContent = texts.mainSubtitle; UIElements.categoryTitle.textContent = texts.categoryTitle; const categoryButtonsContainer = UIElements.categoryButtons; categoryButtonsContainer.innerHTML = ''; Object.keys(readingTypes).forEach(type => { const btn = document.createElement('button'); btn.dataset.type = type; btn.className = 'category-btn'; btn.textContent = readingTypes[type][lang].title; btn.addEventListener('click', () => selectReadingType(type)); categoryButtonsContainer.appendChild(btn); }); document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active')); document.querySelector(`.lang-btn[data-lang="${lang}"]`)?.classList.add('active'); }
         
-        function loadCardData() { const storedData = localStorage.getItem(LOCAL_STORAGE_KEY); const dataEl = UIElements.cardDataStorage; try { if (storedData) { appState.fullDeck = JSON.parse(storedData); } else if (dataEl && dataEl.value.trim()) { appState.fullDeck = JSON.parse(dataEl.value.trim()); } else { appState.fullDeck = []; } } catch (e) { appState.fullDeck = []; } }
+        function loadCardData() { 
+  const storedData = localStorage.getItem(LOCAL_STORAGE_KEY); 
+  const dataEl = UIElements.cardDataStorage; 
+  
+  // Helper function to validate card data
+  function validateCardData(data) {
+    if (!Array.isArray(data)) return false;
+    return data.every(card => 
+      card && 
+      typeof card === 'object' && 
+      typeof card.id === 'string' && 
+      typeof card.name === 'string' &&
+      typeof card.name_kr === 'string'
+    );
+  }
+  
+  try { 
+    if (storedData) { 
+      const parsedData = JSON.parse(storedData);
+      if (validateCardData(parsedData)) {
+        appState.fullDeck = parsedData;
+      } else {
+        console.warn('Invalid card data format in localStorage, using default');
+        appState.fullDeck = [];
+      }
+    } else if (dataEl && dataEl.value.trim()) { 
+      const parsedData = JSON.parse(dataEl.value.trim());
+      if (validateCardData(parsedData)) {
+        appState.fullDeck = parsedData;
+      } else {
+        console.warn('Invalid card data format in data element, using default');
+        appState.fullDeck = [];
+      }
+    } else { 
+      appState.fullDeck = []; 
+    } 
+  } catch (e) { 
+    console.error('Error parsing card data:', e);
+    appState.fullDeck = []; 
+  } 
+}
         
         function selectReadingType(type, fromLanguageChange = false) { appState.currentReadingType = type; if (!fromLanguageChange) { appState.selectedCards = []; appState.currentRotation = 0; } const lang = appState.currentLanguage; const config = readingTypes[type][lang]; document.querySelectorAll('.category-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type)); UIElements.readingTitle.textContent = config.title; UIElements.categoryDescription.innerHTML = config.description || ''; resetReadingArea(); }
         
@@ -3145,7 +3185,24 @@
         
         function fisherYatesShuffle(array) { let ci = array.length, ri; while (ci !== 0) { ri = Math.floor(Math.random() * ci); ci--; [array[ci], array[ri]] = [array[ri], array[ci]]; } return array; }
         
-        function showToast(message) { const toast = getEl("toast"); if (!toast) return; toast.textContent = message; toast.classList.add("show"); setTimeout(() => { toast.classList.remove("show"); }, 3000); }
+        function showToast(message) { 
+  const toast = getEl("toast"); 
+  if (!toast) return; 
+  
+  // Clear any existing timeout to prevent memory leaks
+  if (toast._timeoutId) {
+    clearTimeout(toast._timeoutId);
+  }
+  
+  toast.textContent = message; 
+  toast.classList.add("show"); 
+  
+  // Store the timeout ID so we can clear it later
+  toast._timeoutId = setTimeout(() => { 
+    toast.classList.remove("show"); 
+    toast._timeoutId = null;
+  }, 3000); 
+}
         
         async function shareApp() {
             const shareData = {

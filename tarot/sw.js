@@ -26,7 +26,30 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((response) => {
         // 캐시에 파일이 있으면 그것을 반환하고, 없으면 네트워크에서 가져옴
-        return response || fetch(event.request);
+        if (response) {
+          return response;
+        }
+        
+        return fetch(event.request)
+          .then((networkResponse) => {
+            // 네트워크 응답이 성공적이면 캐시에 저장
+            if (networkResponse && networkResponse.status === 200) {
+              const responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(event.request, responseClone);
+                });
+            }
+            return networkResponse;
+          })
+          .catch((error) => {
+            // 네트워크 요청이 실패하면 기본 페이지 반환
+            console.error('Fetch failed:', error);
+            if (event.request.destination === 'document') {
+              return caches.match('/tarot/index.html');
+            }
+            return new Response('Network error', { status: 503 });
+          });
       })
   );
 });
