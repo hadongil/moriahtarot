@@ -92,16 +92,30 @@
         @media (min-width: 600px) { .card-deck-inner { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); } }
         
         .tarot-card { width: 100%; aspect-ratio: 80 / 136; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; user-select: none; will-change: transform, box-shadow; position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, rgba(192, 183, 232, 0.1) 0%, transparent 70%), linear-gradient(145deg, #1f1d47, #121222); box-shadow: 0 5px 15px var(--shadow-color), inset 0 0 20px rgba(10, 9, 26, 0.7); }
-        .card-back-design { position: absolute; inset: 0; }
+        .card-back-design { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(192, 183, 232, 0.1) 0%, transparent 70%), linear-gradient(145deg, #1f1d47, #121222); overflow: hidden; }
         .card-back-design .star { position: absolute; background-color: white; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(212, 203, 255, 0.7); animation: twinkle 4s ease-in-out infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0.7; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
-        .card-back-design .star:nth-child(1) { top: 30%; left: 25%; width: 2px; height: 2px; animation-delay: 0s; }
-        .card-back-design .star:nth-child(2) { top: 50%; left: 20%; width: 3px; height: 3px; animation-delay: 0.5s; }
-        .card-back-design .star:nth-child(3) { top: 55%; left: 50%; width: 2.5px; height: 2.5px; animation-delay: 1.2s; }
-        .card-back-design .star:nth-child(4) { top: 35%; left: 55%; width: 2px; height: 2px; animation-delay: 2s; }
-        .card-back-design .star:nth-child(5) { top: 30%; left: 75%; width: 3px; height: 3px; animation-delay: 1.5s; }
-        .card-back-design .star:nth-child(6) { top: 20%; left: 90%; width: 2.5px; height: 2.5px; animation-delay: 0.8s; }
-        .card-back-design .star:nth-child(7) { top: 10%; left: 85%; width: 2px; height: 2px; animation-delay: 2.5s; }
+        
+        /* 북두칠성 모양의 별 위치 및 크기 (중앙 배치) */
+        .card-back-design .star:nth-child(1) { top: 40%; left: 60%; width: 2px; height: 2px; animation-delay: 0s; } /* 두브헤 (Dubhe) */
+        .card-back-design .star:nth-child(2) { top: 60%; left: 55%; width: 2.5px; height: 2.5px; animation-delay: 0.5s; } /* 메라크 (Merak) */
+        .card-back-design .star:nth-child(3) { top: 65%; left: 35%; width: 3px; height: 3px; animation-delay: 1.2s; } /* 페크다 (Phecda) */
+        .card-back-design .star:nth-child(4) { top: 45%; left: 40%; width: 2.5px; height: 2.5px; animation-delay: 2s; } /* 메그레즈 (Megrez) */
+        .card-back-design .star:nth-child(5) { top: 35%; left: 25%; width: 3px; height: 3px; animation-delay: 1.5s; } /* 알리오스 (Alioth) */
+        .card-back-design .star:nth-child(6) { top: 25%; left: 15%; width: 2.5px; height: 2.5px; animation-delay: 0.8s; } /* 미자르 (Mizar) */
+        .card-back-design .star:nth-child(7) { top: 15%; left: 5%; width: 2px; height: 2px; animation-delay: 2.5s; } /* 알카이드 (Alkaid) */
+
+        /* 북두칠성 선 */
+        .card-back-design::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            /* ★★★ 더 복잡하고 기하학적인 패턴으로 변경 ★★★ */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 165"><rect x="0" y="0" width="100" height="165" fill="none" stroke="rgba(192, 183, 232, 0.1)" stroke-width="0.5"/><path d="M50 10 L90 82.5 L50 155 L10 82.5 Z" stroke="rgba(192, 183, 232, 0.3)" stroke-width="1" fill="none"/><path d="M10 10 L90 10 L90 155 L10 155 Z" stroke="rgba(192, 183, 232, 0.2)" stroke-width="0.5" fill="none"/><line x1="10" y1="10" x2="90" y2="155" stroke="rgba(192, 183, 232, 0.2)" stroke-width="0.5"/><line x1="90" y1="10" x2="10" y2="155" stroke="rgba(192, 183, 232, 0.2)" stroke-width="0.5"/><circle cx="50" cy="82.5" r="15" stroke="rgba(192, 183, 232, 0.4)" stroke-width="1" fill="none"/></svg>');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            opacity: 0.7;
+        }
 
         .tarot-card:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 8px 25px var(--shadow-color), inset 0 0 20px rgba(10, 9, 26, 0.7); }
         .tarot-card.is-flying { pointer-events: none; z-index: 50; }
@@ -112,40 +126,87 @@
         /* ★★★★★★★★★★★ 결과 화면 레이아웃 및 기능 개선 ★★★★★★★★★★★ */
         #reading-result { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 9, 26, 0.7); backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
         #reading-result.visible { opacity: 1; pointer-events: auto; }
-        #result-content { background: radial-gradient(circle at 50% 0%, rgba(28, 26, 58, 0.7), var(--bg-dark) 80%); border: 1px solid var(--border-color); border-radius: 1.5rem; width: 90%; max-width: 850px; max-height: 90vh; padding: 2rem; box-shadow: 0 20px 50px var(--shadow-color); transform: scale(0.95); transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1); display: flex; flex-direction: column; }
-        #result-main-view { display: flex; gap: 2rem; flex: 1; min-height: 0; padding-bottom: 1rem; /* 내용이 버튼과 겹치지 않게 패딩 추가 */ }
-        
-        #result-card-display { flex-basis: 160px; /* 카드 크기 축소 */ flex-shrink: 0; text-align: center; perspective: 1000px; cursor: zoom-in; }
-        #result-card-flipper { width: 100%; margin: 0 auto 1rem; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
-        #result-card-image { width: 100%; box-shadow: 0 10px 35px rgba(0,0,0,0.5); border-radius: 12px; position: relative; transform-style: preserve-3d; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-        #result-card-image::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 12px; box-shadow: inset 0 0 20px rgba(192, 183, 232, 0.6); opacity: 0.8; }
-        #result-card-image img { width: 100%; border-radius: 10px; display: block; }
-        
-        #result-label { font-family: 'Pretendard', sans-serif; color: var(--primary); font-weight: 500; font-size: 1rem; }
-        #result-text-content { flex: 1; display: flex; flex-direction: column; min-width: 0; text-align: left; }
+        #result-content { position: relative; z-index: 1; background: radial-gradient(circle at 50% 0%, rgba(28, 26, 58, 0.7), var(--bg-dark) 80%); border: 1px solid var(--border-color); border-radius: 1.5rem; width: 90%; max-width: 850px; max-height: 95vh; /* 창 높이 증가 */ padding: 2rem; box-shadow: 0 20px 50px var(--shadow-color); transform: scale(0.95); transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1); display: flex; flex-direction: column; }
+        #result-main-view { display: flex; flex-direction: column; gap: 1.5rem; flex: 1; min-height: 0; }
+
+        /* 3장 카드 보기 레이아웃 */
+        #result-cards-row { display: flex; justify-content: center; align-items: center; gap: 1rem; padding: 1rem 0; flex-shrink: 0; min-height: 180px; position: relative; z-index: 5; transform: translateY(-15px); }
+        .result-card-item { 
+            width: 100px; 
+            cursor: pointer; 
+            transition: transform 0.4s ease;
+            opacity: 1 !important; /* 다른 투명도 규칙 무시 */
+            visibility: visible !important; /* 다른 숨김 규칙 무시 */
+        }
+        .result-card-item img { 
+            width: 100%; 
+            border-radius: 8px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+            transition: box-shadow 0.4s ease; /* 빛나는 효과를 위한 트랜지션 */
+            opacity: 1 !important; /* 이미지 투명도 강제 */
+            display: block !important; /* 이미지 표시 강제 */
+        }
+        .result-card-item.active { 
+            transform: scale(1.15) translateY(-10px); 
+            cursor: zoom-in; 
+        }
+        /* ★★★ 활성화된 카드에 빛나는 효과 추가 ★★★ */
+        .result-card-item.active img {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 20px var(--primary);
+        }
+        .result-card-item:not(.active):hover { 
+            transform: translateY(-5px); 
+        }
+
+        #share-result-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        #share-result-btn:hover {
+            color: var(--primary);
+            background-color: rgba(192, 183, 232, 0.1);
+        }
+        #share-result-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        #result-text-content { flex: 1; display: flex; flex-direction: column; min-width: 0; text-align: center; min-height: 0; } /* PC에서 내용이 버튼을 침범하는 문제 해결 */
+        #result-label { font-family: 'Pretendard', sans-serif; color: var(--primary); font-weight: 500; font-size: 1rem; margin-bottom: 0.5rem; }
         #result-card-name { font-family: 'Cinzel', serif; font-size: clamp(1.8rem, 5vw, 2.2rem); color: var(--text-light); margin-bottom: 0.5rem; letter-spacing: 0.05em; }
         #result-keywords { font-family: 'Pretendard', sans-serif; font-style: italic; color: var(--text-dark); font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; }
         #result-interpretation-wrapper { flex: 1; overflow-y: auto; min-height: 0; padding-right: 1rem; }
-        
+        #result-interpretation { text-align: left; }
         #result-interpretation p { margin-bottom: 1em; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
         #result-interpretation p.is-visible { opacity: 1; transform: translateY(0); }
-        
+
         #result-interpretation-wrapper::-webkit-scrollbar { width: 6px; }
         #result-interpretation-wrapper::-webkit-scrollbar-track { background: transparent; }
         #result-interpretation-wrapper::-webkit-scrollbar-thumb { background-color: var(--text-dark); border-radius: 3px; }
         #result-interpretation-wrapper::-webkit-scrollbar-thumb:hover { background-color: var(--primary); }
-        #result-actions { margin-top: 1rem; /* 겹침 문제 해결 후 여백 조정 */ padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; }
+        #result-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; }
+        #result-actions .tertiary-btn { background: none; border: none; color: var(--text-dark); cursor: pointer; font-size: 0.9rem; transition: color 0.3s ease; }
+        #result-actions .tertiary-btn:hover { color: var(--primary); }
         #result-actions .tertiary-btn { background: none; border: none; color: var(--text-dark); cursor: pointer; font-size: 0.9rem; transition: color 0.3s ease; }
         #result-actions .tertiary-btn:hover { color: var(--primary); }
         #close-result-btn { padding: 0.7rem 1.8rem; margin: 0; font-size: 0.9rem; }
 
         @media (max-width: 768px) {
             #result-content { padding: 1.5rem 1rem; }
-            #result-main-view { flex-direction: column; gap: 1.5rem; }
-            #result-card-display { flex-basis: auto; width: 40%; max-width: 140px; margin: 0 auto; } /* 모바일 카드 크기 축소 */
-            #result-text-content { text-align: center; }
-            #result-interpretation-wrapper { max-height: 28vh; }
-            #result-interpretation { text-align: left; }
+            #result-main-view { gap: 1rem; }
+            #result-cards-row { min-height: 150px; gap: 0.5rem; transform: translateY(-25px); } /* 모바일 카드 위치 조정 */
+            .result-card-item { width: 80px; }
+            #result-interpretation-wrapper { max-height: 30vh; } /* 모바일 높이 조정 */
         }
         
         /* ★★★★★★★★★★★ 카드 크게 보기 기능 스타일 ★★★★★★★★★★★ */
@@ -215,16 +276,15 @@
     
     <div id="reading-result">
         <div id="result-content">
+            <button id="share-result-btn" title="결과 공유하기">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+            </button>
             <div id="result-main-view">
-                <div id="result-card-display">
-                    <div id="result-card-flipper">
-                        <div id="result-card-image">
-                            <img src="" alt="Tarot Card Image" />
-                        </div>
-                    </div>
-                    <h3 id="result-label"></h3>
+                <div id="result-cards-row">
+                    <!-- 선택된 카드들이 여기에 동적으로 추가됩니다. -->
                 </div>
                 <div id="result-text-content">
+                    <h3 id="result-label"></h3>
                     <h2 id="result-card-name"></h2>
                     <p id="result-keywords"></p>
                     <div id="result-interpretation-wrapper">
@@ -252,6 +312,7 @@
             currentReading: null,
             chosenCards: [],
             currentResultIndex: 0,
+            isCardSelecting: false, // 카드 선택 중복 방지 플래그
             intersectionObserver: null,
             isTouchDevice: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
             activeMobileStar: null,
@@ -321,28 +382,25 @@
                 gsap.to(UIElements.resultContent, {
                     opacity: 0, scale: 0.9, y: 20, duration: 0.4, ease: 'power2.in',
                     onComplete: () => {
+                        // ★★★ 숨겼던 app-root를 다시 표시
+                        document.getElementById('app-root').style.display = 'block';
+                        
                         UIElements.readingResult.classList.remove('visible');
                         resetSpread();
                         transitionToScene(UIElements.table, UIElements.sanctum);
                     }
                 });
             });
-            UIElements.prevCardBtn.addEventListener('click', () => navigateResult(-1));
-            UIElements.nextCardBtn.addEventListener('click', () => navigateResult(1));
 
-            if (!app.isTouchDevice) {
-                UIElements.constellationSvg.addEventListener('mouseover', handleConstellationHover);
-                UIElements.constellationSvg.addEventListener('mouseout', handleConstellationLeave);
-            }
-            UIElements.constellationSvg.addEventListener('click', (e) => {
-                if (e.target.tagName.toLowerCase() === 'svg' && app.activeMobileStar) {
-                    deactivateActiveMobileStar();
-                }
-            });
-            
-            // ★★★★★★★★★★★ 카드 크게 보기 이벤트 리스너 추가 ★★★★★★★★★★★
-            UIElements.resultCardDisplay.addEventListener('click', showEnlargedCard);
+            const prevBtn = document.getElementById('prev-card-btn');
+            const nextBtn = document.getElementById('next-card-btn');
+            if(prevBtn) prevBtn.addEventListener('click', () => navigateResult(-1));
+            if(nextBtn) nextBtn.addEventListener('click', () => navigateResult(1));
+
             UIElements.enlargedCardView.addEventListener('click', hideEnlargedCard);
+
+            const shareBtn = document.getElementById('share-result-btn');
+            if(shareBtn) shareBtn.addEventListener('click', shareResult);
         }
         
         function handleOrbClick() {
@@ -363,8 +421,12 @@
         function transitionToScene(from, to, onComplete) {
             deactivateActiveMobileStar();
             const tl = gsap.timeline({
+                onStart: () => {
+                    // 씬 전환 시작 시 모든 UI 레이어의 포인터 이벤트를 비활성화합니다.
+                    document.querySelectorAll('.ui-layer').forEach(layer => layer.style.pointerEvents = 'none');
+                },
                 onComplete: () => {
-                    from.style.pointerEvents = 'none';
+                    // 씬 전환 완료 시 대상 씬만 활성화합니다.
                     to.style.pointerEvents = 'auto';
                     if (to === UIElements.pathway) {
                         const pathLine = UIElements.pathway.querySelector('.path-line');
@@ -378,8 +440,7 @@
                 }
             });
 
-            tl.set(from, { pointerEvents: 'none' })
-              .to(from, { duration: 0.8, z: -400, opacity: 0, ease: 'power2.in' })
+            tl.to(from, { duration: 0.8, z: -400, opacity: 0, ease: 'power2.in' })
               .to(to, { duration: 1.0, z: 0, opacity: 1, ease: 'power2.out' }, ">")
               .from(to.querySelectorAll('.prompt > h1, .prompt > h2, .prompt > p:not(.reveal-text), #focus-orb, #constellation-map-container'), { duration: 0.8, y: 40, opacity: 0, stagger: 0.1, ease: 'power2.out' }, "-=0.8")
               .add(() => {
@@ -467,8 +528,9 @@
         }
         
         function handleCardSelection(e) {
-            if (app.chosenCards.length >= app.currentReading.cardsToDraw) return;
+            if (app.isCardSelecting || app.chosenCards.length >= app.currentReading.cardsToDraw) return;
             
+            app.isCardSelecting = true; // 선택 시작, 플래그 활성화
             const cardElement = e.currentTarget;
             cardElement.classList.add('is-flying');
             
@@ -476,7 +538,10 @@
             const cardData = app.cardData.find(c => c.id === cardId);
             const targetSlot = UIElements.chosenCardsArea.querySelector('.card-slot:not(.filled)');
             
-            if (!targetSlot) return;
+            if (!targetSlot) {
+                app.isCardSelecting = false; // 슬롯 없으면 플래그 비활성화
+                return;
+            }
             
             const slotIndex = parseInt(targetSlot.dataset.slotIndex, 10);
             const cardInfo = { ...cardData, isReversed: Math.random() < 0.3, slotIndex };
@@ -510,6 +575,7 @@
                     gsap.set(flyingCard, { position: 'absolute', top: 0, left: 0, x: 0, y: 0, zIndex: 1 });
                     targetSlot.classList.add('filled');
                     flyingCard.addEventListener('click', () => handleChosenCardClick(cardId, targetSlot, flyingCard));
+                    app.isCardSelecting = false; // 선택 완료, 플래그 비활성화
                 }
             });
 
@@ -570,27 +636,119 @@
         }
 
         function showResult() {
+            // ★★★ 가장 강력한 방법: app-root를 숨겨서 배경 클릭을 원천 차단
+            document.getElementById('app-root').style.display = 'none';
+
             app.currentResultIndex = 0;
             app.chosenCards.sort((a, b) => a.slotIndex - b.slotIndex);
 
-            populateResult(app.chosenCards[0]);
             UIElements.readingResult.classList.add("visible");
             gsap.killTweensOf(UIElements.revealBtn);
             gsap.to(UIElements.revealBtn, { scale: 1, borderColor: 'var(--border-color)', boxShadow: '0 0 0 rgba(192, 183, 232, 0)', duration: 0.4 });
-            
+
+            populateResultCards();
+            updateResultView(0, true); // Show first card's details initially
+
             const tl = gsap.timeline();
             tl.fromTo(UIElements.resultContent, { opacity: 0, scale: 0.9, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: 'cubic-bezier(0.165, 0.84, 0.44, 1)' });
-            tl.from(UIElements.resultFlipper, { rotationY: -90, opacity: 0, duration: 0.7, ease: 'power2.out' }, "-=0.3");
-            tl.from(UIElements.readingResult.querySelector('#result-text-content').children, { opacity: 0, y: 20, duration: 0.5, stagger: 0.1, ease: 'power2.out' }, "-=0.4");
+            tl.from("#result-cards-row .result-card-item", { opacity: 0, y: 50, scale: 0.8, stagger: 0.1, duration: 0.5, ease: 'power2.out' }, "-=0.3");
+            tl.from("#result-text-content > *", { opacity: 0, y: 20, duration: 0.5, stagger: 0.08, ease: 'power2.out' }, "-=0.4");
             tl.from(UIElements.readingResult.querySelector('#result-actions'), { opacity: 0, duration: 0.4 }, "-=0.5");
-            
-            setupIntersectionObserver();
         };
+
+        function populateResultCards() {
+            const cardsRow = document.getElementById('result-cards-row');
+            cardsRow.innerHTML = '';
+            app.chosenCards.forEach((card, index) => {
+                if (!card) return;
+                const cardItem = document.createElement('div');
+                cardItem.className = 'result-card-item';
+                cardItem.dataset.index = index;
+
+                const img = document.createElement('img');
+                const imgPath = `images/${card.id}.jpg`;
+                img.src = imgPath;
+                img.alt = card.name_kr;
+                img.style.transform = card.isReversed ? 'rotate(180deg)' : 'rotate(0deg)';
+
+                img.onerror = function() {
+                    console.error(`이미지 로딩 실패: ${imgPath}`);
+                    this.src = `https://via.placeholder.com/100x165/0A091A/FFFFFF?text=Error+${card.id}`;
+                    this.alt = `이미지 로딩 오류: ${card.name_kr}`;
+                };
+
+                cardItem.appendChild(img);
+                cardItem.addEventListener('click', () => {
+                    if (app.currentResultIndex !== index) {
+                        updateResultView(index);
+                    } else {
+                        showEnlargedCard();
+                    }
+                });
+                cardsRow.appendChild(cardItem);
+            });
+        }
+
+        function updateResultView(index, isInitial = false) {
+            app.currentResultIndex = index;
+            const card = app.chosenCards[index];
+            if (!card) return;
+
+            // Update active card visual state
+            const cardItems = document.querySelectorAll('#result-cards-row .result-card-item');
+            cardItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            const resultRoot = document.getElementById('reading-result');
+            const labelEl = resultRoot.querySelector("#result-label");
+            const nameEl = resultRoot.querySelector("#result-card-name");
+            const keywordsEl = resultRoot.querySelector("#result-keywords");
+            const interpretationEl = resultRoot.querySelector("#result-interpretation");
+            const interpretationWrapper = resultRoot.querySelector("#result-interpretation-wrapper");
+
+            const updateText = () => {
+                const labels = app.currentReading.labels || [];
+                labelEl.textContent = labels[index] || `카드 ${index + 1}`;
+                nameEl.textContent = `${card.name_kr}${card.isReversed ? " (역방향)" : ""}`;
+                
+                const keywords = card.isReversed ? card.reversed_keywords || [] : card.upright_keywords || [];
+                keywordsEl.textContent = keywords.join(" · ");
+                
+                const meaning = card.isReversed ? card.reversed_meaning || {} : card.meaning || {};
+                const interpretationText = meaning.general || "해설을 준비 중입니다.";
+                interpretationEl.innerHTML = `<p>${interpretationText.replace(/\n/g, '</p><p>')}</p>`;
+                interpretationWrapper.scrollTop = 0;
+                
+                setupIntersectionObserver();
+            };
+
+            if (isInitial) {
+                updateText();
+            } else {
+                const textContent = document.getElementById('result-text-content');
+                gsap.timeline()
+                    .to(textContent.children, { opacity: 0, y: 10, duration: 0.2, ease: 'power1.in', stagger: 0.05 })
+                    .add(updateText)
+                    .fromTo(textContent.children, 
+                        { opacity: 0, y: -10 },
+                        { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out', stagger: 0.05 }
+                    );
+            }
+        }
+
+        function navigateResult(direction) {
+            const cardCount = app.chosenCards.length;
+            if (cardCount <= 1) return;
+
+            const newIndex = (app.currentResultIndex + direction + cardCount) % cardCount;
+            updateResultView(newIndex);
+        }
         
         function setupIntersectionObserver() {
             if (app.intersectionObserver) app.intersectionObserver.disconnect();
             
-            const options = { root: UIElements.readingResult.querySelector('#result-interpretation-wrapper'), rootMargin: '0px', threshold: 0.1 };
+            const options = { root: document.getElementById('result-interpretation-wrapper'), rootMargin: '0px', threshold: 0.1 };
             
             app.intersectionObserver = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
@@ -600,69 +758,56 @@
                 });
             }, options);
 
-            const paragraphs = UIElements.readingResult.querySelectorAll('#result-interpretation p');
-            paragraphs.forEach(p => app.intersectionObserver.observe(p));
+            const paragraphs = document.querySelectorAll('#result-interpretation p');
+            paragraphs.forEach(p => {
+                p.classList.remove('is-visible'); // Reset visibility for new text
+                app.intersectionObserver.observe(p);
+            });
         }
 
-        function navigateResult(direction) {
-            const cardCount = app.chosenCards.length;
-            if (cardCount <= 1 || gsap.isTweening(UIElements.resultFlipper)) return;
-
-            const newIndex = (app.currentResultIndex + direction + cardCount) % cardCount;
-            app.currentResultIndex = newIndex;
-
-            gsap.timeline({ onComplete: setupIntersectionObserver })
-                .to(UIElements.resultFlipper, { rotationY: '+=90', duration: 0.4, ease: 'power2.in' })
-                .add(() => populateResult(app.chosenCards[app.currentResultIndex]))
-                .set(UIElements.resultFlipper, { rotationY: '-=90' })
-                .to(UIElements.resultFlipper, { rotationY: 0, duration: 0.4, ease: 'power2.out' });
-        };
-        
-        function populateResult(card) {
-            if (!card) return;
-            const resultRoot = document.getElementById('reading-result');
-            const img = resultRoot.querySelector("#result-card-image img");
-            const labelEl = resultRoot.querySelector("#result-label");
-            const nameEl = resultRoot.querySelector("#result-card-name");
-            const keywordsEl = resultRoot.querySelector("#result-keywords");
-            const interpretationEl = resultRoot.querySelector("#result-interpretation");
-            const interpretationWrapper = resultRoot.querySelector("#result-interpretation-wrapper");
-            const prevBtn = resultRoot.querySelector("#prev-card-btn");
-            const nextBtn = resultRoot.querySelector("#next-card-btn");
-
-            const labels = app.currentReading.labels || [];
-            img.src = card.imageUrl || `https://via.placeholder.com/220x374`;
-            img.alt = `${card.name_kr} Card`;
-            
-            UIElements.resultFlipper.style.transform = card.isReversed ? "rotate(180deg)" : "rotate(0deg)";
-            
-            labelEl.textContent = labels[app.currentResultIndex] || '당신의 카드';
-            nameEl.textContent = `${card.name_kr}${card.isReversed ? " (역방향)" : ""}`;
-            
-            const keywords = card.isReversed ? card.reversed_keywords || [] : card.upright_keywords || [];
-            keywordsEl.textContent = keywords.join(" · ");
-            
-            const meaning = card.isReversed ? card.reversed_meaning || {} : card.meaning || {};
-            const interpretationText = meaning.general || "해설을 준비 중입니다.";
-            interpretationEl.innerHTML = `<p>${interpretationText.replace(/\n/g, '</p><p>')}</p>`;
-            interpretationWrapper.scrollTop = 0;
-
-            const hasMultipleCards = app.chosenCards.length > 1;
-            prevBtn.style.visibility = hasMultipleCards ? "visible" : "hidden";
-            nextBtn.style.visibility = hasMultipleCards ? "visible" : "hidden";
-        };
-        
-        // ★★★★★★★★★★★ 카드 크게 보기 기능 함수 ★★★★★★★★★★★
+        // ★★★★★★★★★★★ 카드 크게 보기 / 공유 기능 함수 ★★★★★★★★★★★
         function showEnlargedCard() {
             const currentCard = app.chosenCards[app.currentResultIndex];
             if (!currentCard) return;
             
-            UIElements.enlargedCardImage.src = currentCard.imageUrl;
+            const enlargedImg = UIElements.enlargedCardImage;
+            const imgPath = `images/${currentCard.id}.jpg`;
+            enlargedImg.src = imgPath;
+
+            // ★★★ 확대 시 정방향/역방향 반영 ★★★
+            enlargedImg.style.transform = currentCard.isReversed ? 'rotate(180deg)' : 'rotate(0deg)';
+
+            enlargedImg.onerror = function() {
+                console.error(`확대 이미지 로딩 실패: ${imgPath}`);
+                this.src = `https://via.placeholder.com/400x660/0A091A/FFFFFF?text=Error+${currentCard.id}`;
+                this.alt = `이미지 로딩 오류: ${currentCard.name_kr}`;
+            };
+
             UIElements.enlargedCardView.classList.add('visible');
         }
 
         function hideEnlargedCard() {
             UIElements.enlargedCardView.classList.remove('visible');
+        }
+
+        function shareResult() {
+            const currentCard = app.chosenCards[app.currentResultIndex];
+            if(!currentCard) return;
+
+            const resultTitle = `모리아의 신탁: ${app.currentReading.ko.title}`;
+            const resultText = `선택된 카드: ${currentCard.name_kr}${currentCard.isReversed ? " (역방향)" : ""}`;
+            const resultUrl = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: resultTitle,
+                    text: resultText,
+                    url: resultUrl,
+                })
+                .catch((error) => console.log('Error sharing', error));
+            } else {
+                alert('이 브라우저에서는 공유 기능을 지원하지 않습니다.');
+            }
         }
 
         function resetSpread() {
