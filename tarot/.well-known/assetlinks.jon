@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.moriatarot.twa",
+      "sha256_cert_fingerprints": [
+        "7C:4A:EC:BE:94:58:2D:48:32:0B:F5:C4:4E:19:93:B4:C4:A7:C9:2F:1B:9F:F9:B4:91:FF:5A:66:E8:E7:BC:81"
+      ]
+    }
+  }
+]
